@@ -1,5 +1,9 @@
 require 'rspec/given'
+require 'rspec'
 require 'gimme'
+RSpec.configure do |config|
+      config.mock_framework = Gimme::RSpecAdapter
+end
 require 'protection_proxy'
 
 describe ProtectionProxy do
@@ -29,61 +33,61 @@ describe ProtectionProxy do
     end
   end
 
-  Given(:user) { User.new("Jim", "jim@somewhere.com", "Beginner") }
+  Given!(:user) { User.new("Jim", "jim@somewhere.com", "Beginner") }
 
   context "when user the owner role" do
-    Given(:proxy) { ProtectedUser.find_proxy(user, :owner) }
+    Given!(:proxy) { ProtectedUser.find_proxy(user, :owner) }
 
-    Then { proxy.name.should == "Jim" }
+    Then { expect(proxy.name).to eq("Jim") }
 
     context "when I change a writable attribute" do
       When { proxy.membership_level = "Advanced" }
-      Then { proxy.membership_level.should == "Advanced" }
+      Then { expect(proxy.membership_level).to eq("Advanced") }
     end
 
     context "when I change a protected attribute" do
       When { proxy.name = "Joe" }
-      Then { proxy.name.should == "Jim" }
+      Then { expect(proxy.name).to eq("Jim") }
     end
 
     context "when I use update attributes" do
       When { proxy.update_attributes(name: "Joe", membership_level: "Advanced") }
-      Then { proxy.name.should == "Jim" }
-      Then { proxy.membership_level.should == "Advanced" }
+      Then { expect(proxy.name).to eq("Jim") }
+      Then { expect(proxy.membership_level).to eq("Advanced") }
     end
 
     describe "the interaction with the original update_attributes" do
-      Given(:user) { gimme(User) }
+      Given!(:user) { gimme(User) }
       When { proxy.update_attributes(name: "Joe", membership_level: "Advanced") }
-      Then { verify(user).update_attributes(membership_level: "Advanced") }
+      Then { verify(user).update_attributes(membership_level: "Advanced").inspect }
     end
   end
 
   context "when user the browser role" do
-    Given(:proxy) { ProtectedUser.find_proxy(user, :browser) }
+    Given!(:proxy) { ProtectedUser.find_proxy(user, :browser) }
 
-    Then { proxy.name.should == "Jim" }
+    Then { expect(proxy.name).to eq("Jim") }
 
     context "when I change a writable attribute" do
       When { proxy.name = "Joe" }
-      Then { proxy.name.should == "Joe" }
+      Then { expect(proxy.name).to eq("Joe") }
     end
 
     context "when I change a protected attribute" do
       When { proxy.membership_level = "SuperUser" }
-      Then { proxy.membership_level.should == "Beginner" }
+      Then { expect(proxy.membership_level).to eq("Beginner") }
     end
 
     context "when I use update attributes" do
       When { proxy.update_attributes(name: "Joe", membership_level: "Advanced") }
-      Then { proxy.name.should == "Joe" }
-      Then { proxy.membership_level.should == "Beginner" }
+      Then { expect(proxy.name).to eq("Joe") }
+      Then { expect(proxy.membership_level).to eq("Beginner") }
     end
 
     describe "the interaction with the original update_attributes" do
-      Given(:user) { gimme(User) }
+      Given!(:user) { gimme(User) }
       When { proxy.update_attributes(name: "Joe", membership_level: "Advanced") }
-      Then { verify(user).update_attributes(name: "Joe") }
+      Then { verify(user).update_attributes(name: "Joe").inspect }
     end
   end
 
